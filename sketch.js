@@ -1,5 +1,7 @@
+// Mise à jour du fichier sketch.js
 let snake;
 let enemies = [];
+let obstacles = [];
 let playing = false;
 let paused = false;
 let lives = 8; // Nombre initial de vies
@@ -16,6 +18,10 @@ function setup() {
         let y = random(height);
         enemies.push(new Enemy(x, y));
     }
+
+    // Création d'obstacles fixes
+    obstacles.push(new Obstacle(300, 200, 40, "blue"));
+    obstacles.push(new Obstacle(600, 400, 50, "red"));
 
     // Connect buttons
     const startButton = document.getElementById("start");
@@ -67,6 +73,11 @@ function draw() {
         return;
     }
 
+    // Affichage des obstacles
+    for (let obstacle of obstacles) {
+        obstacle.show();
+    }
+
     if (playing) {
         snake.animate();
     }
@@ -91,10 +102,8 @@ function draw() {
 
             // Déplacement des ennemis
             let target = playerHead;
-            let seekForce = enemy.seek(target);
-            let avoidForce = enemy.avoid(enemies);
-            enemy.applyForce(seekForce);
-            enemy.applyForce(avoidForce);
+            let pathSteer = enemy.calculateAvoidancePath(target, obstacles);
+            enemy.applyForce(pathSteer);
             enemy.update();
         }
     }
@@ -138,6 +147,11 @@ function keyPressed() {
     }
 }
 
+function mousePressed() {
+    // Ajouter un obstacle de taille aléatoire à la position de la souris
+    obstacles.push(new Obstacle(mouseX, mouseY, random(20, 50), "green"));
+}
+
 function keyReleased() {
     clearInterval(movementInterval); // Arrête le mouvement continu lorsque la touche est relâchée
 }
@@ -157,6 +171,7 @@ function restartGame() {
         let y = random(height);
         enemies.push(new Enemy(x, y));
     }
+    obstacles = [];
     loop();
 }
 
