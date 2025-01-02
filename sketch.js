@@ -15,13 +15,15 @@ function setup() {
     frameRate(10);
     snake = new Snake();
 
+    initializeGoldObjects(); // Initialiser les golds dès le départ
+
     // Création de plusieurs ennemis
     for (let i = 0; i < 5; i++) {
         let x = random(width);
         let y = random(height);
         enemies.push(new Enemy(x, y));
     }
-
+    print("powerUps", powerUps);
     // Connect buttons
     const startButton = document.getElementById("start");
     const pauseButton = document.getElementById("pause");
@@ -47,11 +49,18 @@ function setup() {
     speed1Button.addEventListener("click", () => setSpeed(5));
     speed2Button.addEventListener("click", () => setSpeed(10));
     speed3Button.addEventListener("click", () => setSpeed(15));
-    
+}
+
+function initializeGoldObjects() {
+    goldObjects = [];
+    for (let i = 0; i < 5; i++) {
+        let x = random(20, width - 20); // S'assurer que les golds ne sortent pas des limites de l'écran
+        let y = random(20, height - 20);
+        goldObjects.push(new Gold(x, y));
+    }
 }
 
 function startLevel(level) {
-
     console.log(`Starting level ${level}`);
     enemies = [];
     powerUps = [];
@@ -61,7 +70,7 @@ function startLevel(level) {
 
     for (let i = 0; i < level * 5; i++) {
         let x = random(20, width - 20);
-        let y = random(20, width - 20);
+        let y = random(20, height - 20); // Empêcher les golds de dépasser l'écran
         goldObjects.push(new Gold(x, y));
     }
     console.log("Gold objects:", goldObjects);
@@ -70,8 +79,6 @@ function startLevel(level) {
         let x = random(width);
         let y = random(height);
         enemies.push(new Enemy(x, y));
-        enemy.maxSpeed += level * 0.5;
-        enemies.push(enemy);
     }
 
     for (let i = 0; i < level * 2; i++) {
@@ -129,9 +136,10 @@ function checkCollisions() {
 
     for (let i = goldObjects.length - 1; i >= 0; i--) {
         if (snake.collidesWith(goldObjects[i])) {
-            goldObjects.splice(i, 1); 
+            goldObjects.splice(i, 1);
             goldCollected++;
-            if (goldCollected >= level * 5) { 
+            if (goldCollected >= level * 5) {
+                print("next");
                 nextLevel();
             }
         }
@@ -147,7 +155,6 @@ function updateGoldObjects() {
 function updateGoldDisplay() {
     document.getElementById("gold").innerText = `Gold: ${goldCollected} / ${level * 5}`;
 }
-
 
 function draw() {
     background(30);
@@ -310,6 +317,7 @@ function restartGame() {
     paused = false;
     lives = 8;
     level = 1;
+    initializeGoldObjects(); // Réinitialiser les golds au redémarrage
     startLevel(level);
     enemies = [];
     snake = new Snake();
@@ -327,45 +335,5 @@ function togglePause() {
 
     if (!paused) {
         clearInterval(movementInterval);
-    }
-}
-
-
-class PowerUp {
-    constructor(x, y) {
-        this.pos = createVector(x, y);
-        this.type = type;
-    }
-
-    display() {
-        fill(this.type === 'life' ? 0 : this.type === 'speed' ? 255 : 0, 
-            this.type === 'life' ? 255 : this.type === 'speed' ? 255 : 0, 
-            this.type === 'shield' ? 255 : 0);
-       noStroke();
-       rect(this.pos.x, this.pos.y, 20, 20);
-    }
-
-    applyEffect(snake) {
-        if(this.type === "life") {
-            lives++;
-        } else if (this.type === "speed") {
-            setSpeed(15);
-            setTimeout(() => setSpeed(10), 5000);
-        } else if (this.type === "shield") {
-            snake.shielded = true;
-            setTimeout(() => snake.shielded = false, 5000);
-        }
-    }
-}
-
-class Obstacle {
-    constructor(x, y) {
-        this.pos = createVector(x, y);
-    }
-
-    display() {
-        fill(255, 12, 100); 
-        noStroke();
-        rect(this.pos.x, this.pos.y, 20, 20);
     }
 }
