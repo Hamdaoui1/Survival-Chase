@@ -25,9 +25,12 @@ class Enemy {
         let steer = createVector(0, 0);
         for (let other of enemies) {
             if (other !== this) {
-                let distance = p5.Vector.dist(this.pos, other.pos);
-                if (distance < this.r * 4) { // Si trop proche
-                    let flee = p5.Vector.sub(this.pos, other.pos);
+                let futurePos = p5.Vector.add(this.pos, this.vel); // Position future estimée
+                let otherFuturePos = p5.Vector.add(other.pos, other.vel); // Position future de l'autre ennemi
+                let distance = p5.Vector.dist(futurePos, otherFuturePos);
+
+                if (distance < this.r * 4) { // Si trop proches
+                    let flee = p5.Vector.sub(futurePos, otherFuturePos);
                     flee.setMag(this.maxForce);
                     steer.add(flee);
                 }
