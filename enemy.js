@@ -1,4 +1,4 @@
-// Mise à jour du fichier enemy.js
+// Correction de la méthode calculateAvoidancePath pour permettre un passage proche des obstacles sans collision
 class Enemy {
     constructor(x, y) {
         this.pos = createVector(x, y);
@@ -22,43 +22,34 @@ class Enemy {
         return steer;
     }
 
-    avoidObstacles(obstacles) {
-        let steer = createVector(0, 0);
+    calculateAvoidancePath(target, obstacles) {
+        let bestSteer = this.seek(target);
         let ahead = p5.Vector.add(this.pos, p5.Vector.mult(this.vel.copy().normalize(), this.r * 3));
         let ahead2 = p5.Vector.add(this.pos, p5.Vector.mult(this.vel.copy().normalize(), this.r * 1.5));
 
-        let mostThreatening = null;
-        let shortestDistance = Infinity;
+        let closestObstacle = null;
+        let minDistance = Infinity;
 
         for (let obstacle of obstacles) {
-            let distance = p5.Vector.dist(obstacle.pos, ahead);
-            if (distance < obstacle.r + this.r && distance < shortestDistance) {
-                shortestDistance = distance;
-                mostThreatening = obstacle;
+            let distToAhead = p5.Vector.dist(obstacle.pos, ahead);
+            let distToAhead2 = p5.Vector.dist(obstacle.pos, ahead2);
+
+            if (distToAhead < obstacle.r + this.r || distToAhead2 < obstacle.r + this.r) {
+                let distToObstacle = p5.Vector.dist(this.pos, obstacle.pos);
+                if (distToObstacle < minDistance) {
+                    minDistance = distToObstacle;
+                    closestObstacle = obstacle;
+                }
             }
         }
 
-        if (mostThreatening) {
-            let flee = p5.Vector.sub(this.pos, mostThreatening.pos).normalize();
-            flee.setMag(this.maxForce);
-            steer.add(flee);
+        if (closestObstacle) {
+            let avoidanceForce = p5.Vector.sub(ahead, closestObstacle.pos).normalize();
+            avoidanceForce.setMag(this.maxSpeed);
+            bestSteer.add(avoidanceForce);
         }
 
-        return steer;
-    }
-
-    calculateAvoidancePath(target, obstacles) {
-        let bestSteer = this.seek(target);
-        for (let obstacle of obstacles) {
-            let futurePos = p5.Vector.add(this.pos, p5.Vector.mult(this.vel, 20));
-            let distanceToObstacle = p5.Vector.dist(futurePos, obstacle.pos);
-
-            if (distanceToObstacle < obstacle.r + this.r) {
-                let avoidance = p5.Vector.sub(futurePos, obstacle.pos).normalize();
-                avoidance.setMag(this.maxSpeed);
-                bestSteer.add(avoidance);
-            }
-        }
+        bestSteer.limit(this.maxForce);
         return bestSteer;
     }
 

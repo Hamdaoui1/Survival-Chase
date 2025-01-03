@@ -20,7 +20,7 @@ function setup() {
     }
 
     // Création d'obstacles fixes
-    obstacles.push(new Obstacle(300, 200, 40, "blue"));
+  //  obstacles.push(new Obstacle(300, 200, 40, "blue"));
     obstacles.push(new Obstacle(600, 400, 50, "red"));
 
     // Connect buttons
@@ -87,7 +87,7 @@ function draw() {
             let playerHead = snake.body[snake.body.length - 1];
 
             // Si l'ennemi touche le joueur
-            if (dist(enemy.pos.x, enemy.pos.y, playerHead.x, playerHead.y) < 20) {
+            if (dist(enemy.pos.x, enemy.pos.y, playerHead.x, playerHead.y) < 40) {
                 // Réduire les vies
                 lives--;
 
@@ -102,6 +102,7 @@ function draw() {
 
             // Déplacement des ennemis
             let target = playerHead;
+           // print(" \n&& obstacle " ,obstacles);
             let pathSteer = enemy.calculateAvoidancePath(target, obstacles);
             enemy.applyForce(pathSteer);
             enemy.update();
@@ -147,10 +148,7 @@ function keyPressed() {
     }
 }
 
-function mousePressed() {
-    // Ajouter un obstacle de taille aléatoire à la position de la souris
-    obstacles.push(new Obstacle(mouseX, mouseY, random(20, 50), "green"));
-}
+
 
 function keyReleased() {
     clearInterval(movementInterval); // Arrête le mouvement continu lorsque la touche est relâchée
