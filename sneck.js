@@ -3,21 +3,37 @@ class Snake {
         this.body = [createVector(floor(width / 20 / 2) * 20, floor(height / 20 / 2) * 20)];
         this.xdir = 0;
         this.ydir = 0;
-        this.angle = 0; // Rotation rapide pour les morceaux de bordure
-        this.innerAngle = 0; // Rotation plus lente pour les carrés
-        this.scaleFactor = 1; // Échelle pour le carré intérieur
-        this.growing = true; // Direction de la croissance des carrés
+        this.angle = 0;
+        this.innerAngle = 0;
+        this.scaleFactor = 1;
+        this.growing = true;
     }
 
     setDirection(x, y) {
+        // Vérification pour éviter les directions invalides
+        if ((x === 0 && y === 0) || (x !== 0 && y !== 0)) {
+            console.warn("Direction invalide : x =", x, ", y =", y);
+            return;
+        }
+
         this.xdir = x;
         this.ydir = y;
+        console.log("Nouvelle direction : xdir =", this.xdir, ", ydir =", this.ydir);
     }
 
     update() {
         let head = this.body[this.body.length - 1].copy();
-        head.x += this.xdir * 20;
-        head.y += this.ydir * 20;
+        let nextX = head.x + this.xdir * 20;
+        let nextY = head.y + this.ydir * 20;
+
+        // Vérification de collision avec un obstacle
+        if (isNextMoveOnObstacle(nextX, nextY)) {
+            console.log("Collision détectée pendant le mouvement, arrêt !");
+            return; // Arrête la mise à jour si une collision est détectée
+        }
+
+        head.x = nextX;
+        head.y = nextY;
 
         // Wrap around edges
         if (head.x < 0) head.x = width - 20;
@@ -30,18 +46,16 @@ class Snake {
     }
 
     animate() {
-        // Animation de l'échelle des carrés
         if (this.growing) {
             this.scaleFactor += 0.05;
-            if (this.scaleFactor > 1.2) this.growing = false; // Limite maximale
+            if (this.scaleFactor > 1.2) this.growing = false;
         } else {
             this.scaleFactor -= 0.05;
-            if (this.scaleFactor < 0.8) this.growing = true; // Limite minimale
+            if (this.scaleFactor < 0.8) this.growing = true;
         }
 
-        // Augmente les angles pour les animations
-        this.angle += 0.3; // Rotation rapide pour les arcs
-        this.innerAngle += 0.05; // Rotation plus lente pour les carrés
+        this.angle += 0.3;
+        this.innerAngle += 0.05;
     }
 
     show() {
@@ -50,36 +64,32 @@ class Snake {
         for (let i = 0; i < this.body.length; i++) {
             let pos = this.body[i];
 
-            // Cercle principal
-            fill(34, 139, 34); // Vert vif pour le cercle
+            fill(34, 139, 34);
             ellipse(pos.x, pos.y, 40, 40);
 
-            // Carré intérieur 1 (légèrement plus clair)
             noFill();
-            stroke(50, 205, 50); // Vert clair pour le premier carré
+            stroke(50, 205, 50);
             strokeWeight(3);
             push();
             translate(pos.x, pos.y);
-            rotate(this.innerAngle); // Rotation lente pour le carré
+            rotate(this.innerAngle);
             rectMode(CENTER);
-            rect(0, 0, 20 * this.scaleFactor, 20 * this.scaleFactor); // Taille ajustée pour rester bien à l'intérieur du cercle
+            rect(0, 0, 20 * this.scaleFactor, 20 * this.scaleFactor);
             pop();
 
-            // Carré intérieur 2 inversé avec un angle de 45°
             push();
             translate(pos.x, pos.y);
-            rotate(this.innerAngle + PI / 4); // Rotation lente + angle de 45°
-            stroke(50, 205, 50); // Vert clair pour le deuxième carré
+            rotate(this.innerAngle + PI / 4);
+            stroke(50, 205, 50);
             strokeWeight(3);
             rectMode(CENTER);
-            rect(0, 0, 20 * this.scaleFactor, 20 * this.scaleFactor); // Taille ajustée
+            rect(0, 0, 20 * this.scaleFactor, 20 * this.scaleFactor);
             pop();
 
-            // Bordures coupées (quatre morceaux d'arcs tournants)
             push();
             translate(pos.x, pos.y);
-            rotate(this.angle); // Rotation rapide pour les arcs
-            stroke(0, 255, 0); // Vert néon pour les morceaux de bordure
+            rotate(this.angle);
+            stroke(0, 255, 0);
             strokeWeight(4);
             noFill();
             for (let j = 0; j < 4; j++) {

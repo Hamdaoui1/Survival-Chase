@@ -1,4 +1,4 @@
-// Correction de la méthode calculateAvoidancePath pour permettre un passage proche des obstacles sans collision
+// Mise à jour du fichier enemy.js avec gestion des collisions entre ennemis et obstacles
 class Enemy {
     constructor(x, y) {
         this.pos = createVector(x, y);
@@ -23,34 +23,100 @@ class Enemy {
     }
 
     calculateAvoidancePath(target, obstacles) {
-        let bestSteer = this.seek(target);
-        let ahead = p5.Vector.add(this.pos, p5.Vector.mult(this.vel.copy().normalize(), this.r * 3));
-        let ahead2 = p5.Vector.add(this.pos, p5.Vector.mult(this.vel.copy().normalize(), this.r * 1.5));
+        let bestSteer = this.seek(target); // Force de poursuite vers la cible
 
         let closestObstacle = null;
         let minDistance = Infinity;
 
-        for (let obstacle of obstacles) {
-            let distToAhead = p5.Vector.dist(obstacle.pos, ahead);
-            let distToAhead2 = p5.Vector.dist(obstacle.pos, ahead2);
+        // Distance d’anticipation de base
+        let anticipationDistance1 = this.r * 3;
+        let anticipationDistance2 = this.r * 1.5;
 
-            if (distToAhead < obstacle.r + this.r || distToAhead2 < obstacle.r + this.r) {
-                let distToObstacle = p5.Vector.dist(this.pos, obstacle.pos);
-                if (distToObstacle < minDistance) {
-                    minDistance = distToObstacle;
-                    closestObstacle = obstacle;
+        for (let obstacle of obstacles) {
+            let ahead = p5.Vector.add(this.pos, p5.Vector.mult(this.vel.copy().normalize(), anticipationDistance1));
+            let ahead2 = p5.Vector.add(this.pos, p5.Vector.mult(this.vel.copy().normalize(), anticipationDistance2));
+
+            if (obstacle.type === "circle") {
+                // Détection pour les cercles
+                let distToAhead = p5.Vector.dist(obstacle.pos, ahead);
+                let distToAhead2 = p5.Vector.dist(obstacle.pos, ahead2);
+
+                if (distToAhead < obstacle.size + this.r || distToAhead2 < obstacle.size + this.r) {
+                    let distToObstacle = p5.Vector.dist(this.pos, obstacle.pos);
+                    if (distToObstacle < minDistance) {
+                        minDistance = distToObstacle;
+                        closestObstacle = obstacle;
+                    }
+                }
+            } else if (obstacle.type === "rectangle") {
+                // Marge de sécurité spécifique pour les rectangles
+                let halfWidth = obstacle.size + this.r;
+                let halfHeight = (obstacle.size / 2) + this.r;
+
+                if (
+                    ahead.x > obstacle.pos.x - halfWidth && ahead.x < obstacle.pos.x + halfWidth &&
+                    ahead.y > obstacle.pos.y - halfHeight && ahead.y < obstacle.pos.y + halfHeight
+                ) {
+                    let distToObstacle = p5.Vector.dist(this.pos, obstacle.pos);
+                    if (distToObstacle < minDistance) {
+                        minDistance = distToObstacle;
+                        closestObstacle = obstacle;
+                    }
+                }
+            } else if (obstacle.type === "triangle") {
+                // Marge de sécurité spécifique pour les triangles (boîte englobante élargie)
+                let halfSize = (obstacle.size / 2) + this.r;
+
+                if (
+                    ahead.x > obstacle.pos.x - halfSize && ahead.x < obstacle.pos.x + halfSize &&
+                    ahead.y > obstacle.pos.y - halfSize && ahead.y < obstacle.pos.y + halfSize
+                ) {
+                    let distToObstacle = p5.Vector.dist(this.pos, obstacle.pos);
+                    if (distToObstacle < minDistance) {
+                        minDistance = distToObstacle;
+                        closestObstacle = obstacle;
+                    }
                 }
             }
         }
 
+        // Si un obstacle est trouvé, ajouter une force d'évitement
         if (closestObstacle) {
-            let avoidanceForce = p5.Vector.sub(ahead, closestObstacle.pos).normalize();
+            let avoidanceForce = p5.Vector.sub(this.pos, closestObstacle.pos).normalize();
             avoidanceForce.setMag(this.maxSpeed);
             bestSteer.add(avoidanceForce);
         }
 
         bestSteer.limit(this.maxForce);
         return bestSteer;
+    }
+
+
+
+
+
+    avoidEnemies(enemies) {
+        let steer = createVector(0, 0);
+        let count = 0;
+
+        for (let other of enemies) {
+            if (other !== this) {
+                let distance = p5.Vector.dist(this.pos, other.pos);
+                if (distance < this.r * 4) {
+                    let flee = p5.Vector.sub(this.pos, other.pos).normalize();
+                    flee.div(distance); // Plus la distance est petite, plus la répulsion est forte
+                    steer.add(flee);
+                    count++;
+                }
+            }
+        }
+
+        if (count > 0) {
+            steer.div(count);
+            steer.setMag(this.maxForce);
+        }
+
+        return steer;
     }
 
     applyForce(force) {
