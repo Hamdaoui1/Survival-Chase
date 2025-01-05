@@ -1,66 +1,56 @@
 # Survival Chase
 
 ## Description
-Survival Chase is an exciting game developed in JavaScript with **p5.js**, where the main objective is to survive by dodging enemies relentlessly chasing the player. The player starts with a limited number of lives, and each collision with an enemy reduces these lives. Once all lives are depleted, the game stops and displays a game over message.
+Survival Chase est un jeu développé en utilisant p5 du JavaScript. Le but de ce jeu est de contrôler l'objet "snake" dans le canva pour collecter le nombre d'objet d'or fixé à chaque niveau et protéger le nombre de vie qu'il possède du jeu en évitant les obstacles et les ennemies. 
 
-This **1.0 version** is the first iteration of the project, with plans to implement more reactive behaviors in the future to enhance gameplay.
+![alt text](image.png)
+---
+
+## Fonctionnalités
+- **Mouvement du Joueur** :
+  - Le joueur peut être contrôlé à l'aide des touches fléchées du clavier.
+  - Un mouvement continu est possible si une touche est maintenue enfoncée.
+- **Gestion des Ennemis** :
+  - Les ennemis poursuivent le joueur en utilisant une logique vectorielle.
+  - Lorsqu'un ennemi touche le joueur, il disparaît et réapparaît à une position aléatoire loin du joueur.
+- **Gestion des Vies** :
+  - Le joueur commence avec 8 vies.
+  - Les vies sont affichées en dehors du canvas.
+  - Une collision avec un ennemi réduit les vies du joueur de 1.
+  - Si les vies atteignent 0, le jeu se termine avec un message "GAME OVER".
+
+  ![alt text](image-1.png)
+- **Pause et Contrôle de la Vitesse** :
+  - Des boutons pour démarrer, mettre en pause.
 
 ---
 
-## Current Features
-- **Player Movement**:
-  - The player can be controlled using keyboard arrow keys.
-  - Continuous movement is possible if a key is held down.
-- **Enemy Management**:
-  - Enemies chase the player using vector-based logic.
-  - When an enemy touches the player, it disappears and reappears at a random position far from the player.
-- **Life Management**:
-  - The player starts with 8 lives.
-  - Lives are displayed outside the canvas.
-  - A collision with an enemy reduces the player's lives by 1.
-  - If lives reach 0, the game ends with a "GAME OVER" message.
-- **Pause and Speed Control**:
-  - Buttons to start, pause, and adjust the speed of the game.
+## Exigences
+Pour exécuter ce projet, vous aurez besoin de :
+- Un navigateur moderne prenant en charge JavaScript.
+- L'extension "Live Server" installée. 
+- La bibliothèque **p5.js** pour les animations et la logique vectorielle.
 
 ---
 
-## Requirements
-To run this project, you will need:
-- A modern browser supporting JavaScript.
-- The **p5.js** library for animations and vector logic.
-
----
-
-## Installation and Execution
-1. Clone the project from GitHub:
+## Installation et Execution
+1. Clonez le projet
    ```bash
    git clone https://github.com/Hamdaoui1/Survival-Chase.git
    ```
-2. Navigate to the project folder:
+2. Naviguez vers le répertoire du projet:
    ```bash
    cd Survival-Chase
    ```
-3. Open the `index.html` file in a browser to run the game.
+3. Cliquez droit sur sur fichier `index.html` et choissiez "Open with Live      Server" pour lancer le jeu.
 
 ---
 
-## Future Enhancements
-- Implement new reactive behaviors to enrich enemy interactions.
-- Add levels and new game mechanics.
-- Enable player and enemy customization.
-- Optimize the collision avoidance algorithm.
-
+## Les comportements développées dans ce jeu (appliation du cours IAs Réactives)
+1. Le suivi du leader 
+2. L'évitement de la collision  entres les enmeies 
+3. L'évitement des obstacles
 ---
 
-## Contribution
-If you wish to contribute to the project, feel free to fork the repository and submit your pull requests. Suggestions and improvements are always welcome!
-
----
-
-## License
-This project is licensed under the **MIT License**, meaning you are free to use, modify, and distribute this code, provided that you include a copyright notice. See the [LICENSE](./LICENSE) file for more details.
-
----
-
-## Author
-This project was created by **Hamdaoui1** & **Linhkobe**.
+## Réalisateurs du projet
+Ce projet a été réalisé par **Hamdaoui1** (Hamza Hamdaoui) & **Linhkobe** (Tuan Linh Dao).
