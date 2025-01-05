@@ -7,11 +7,23 @@ let playing = false;
 let paused = false;
 let lives = 8; // Nombre initial de vies
 let goldCollected = 0; // Nombre de gold collectés
+let currentLevel = 1;      // Niveau actuel
+let maxLevel = 5;          // Nombre maximum de niveaux
+let baseEnemyCount = 5;    // Nombre de base d'ennemis au niveau 1
+let baseObstacleCount = 2; // Nombre de base d'obstacles au niveau 1
+let baseSpeed = 20;        // Vitesse de base au niveau 1
+
 let movementInterval; // Pour gérer le mouvement continu du joueur
 let backgroundImage;
+let collectSound, gameOverSound, gameStartSound, loseLifeSound;
 function preload() {
-    backgroundImage = loadImage("src/background.jpg");
+    backgroundImage = loadImage("src/images/background.jpg");
+    collectSound = loadSound("src/sound/collect-points.mp3");
+    gameOverSound = loadSound("src/sound/game-over.mp3");
+    gameStartSound = loadSound("src/sound/game-start.mp3");
+    loseLifeSound = loadSound("src/sound/game-character.mp3");
 }
+
 
 function setup() {
     createCanvas(1200, 600);
@@ -54,9 +66,7 @@ function setup() {
     // Connect buttons
     const startButton = document.getElementById("start");
     const pauseButton = document.getElementById("pause");
-    const speed1Button = document.getElementById("speed1");
-    const speed2Button = document.getElementById("speed2");
-    const speed3Button = document.getElementById("speed3");
+
 
     startButton.addEventListener("click", () => {
         if (!playing) {
@@ -73,9 +83,6 @@ function setup() {
         pauseButton.innerText = paused ? "⏵" : "⏸";
     });
 
-    speed1Button.addEventListener("click", () => setSpeed(5));
-    speed2Button.addEventListener("click", () => setSpeed(10));
-    speed3Button.addEventListener("click", () => setSpeed(15));
 }
 
 function isPositionOnObstacle(x, y, size = 0, type = "circle") {
@@ -136,18 +143,41 @@ function draw() {
         textAlign(CENTER, CENTER);
         fill(255, 0, 0);
         text("GAME OVER !", width / 2, height / 2);
+        gameOverSound.play();
+
         noLoop();
         return;
     }
 
     if (goldCollected === 5) {
-        textSize(48);
-        textAlign(CENTER, CENTER);
-        fill(0, 255, 0);
-        text("VICTOIRE ! Vous avez collecté tous les golds !", width / 2, height / 2);
-        noLoop();
-        return;
+        if (currentLevel < maxLevel) {
+            currentLevel++;  // Passer au niveau suivant
+            goldCollected = 0;
+            golds = [];      // Réinitialiser les golds pour le nouveau niveau
+
+            // Créer de nouveaux golds
+            for (let i = 0; i < 5; i++) {
+                let x, y;
+                do {
+                    x = random(50, width - 50);
+                    y = random(50, height - 50);
+                } while (isPositionOnObstacle(x, y));
+                golds.push(new Gold(x, y));
+            }
+
+            setupLevel(); // Configurer le nouveau niveau
+        } else {
+            // Si le joueur atteint le niveau maximum, il gagne la partie
+            textSize(48);
+            textAlign(CENTER, CENTER);
+            fill(0, 255, 0);
+            text("VICTOIRE ! Vous avez terminé tous les niveaux !", width / 2, height / 2);
+            gameOverSound.play();
+            noLoop();
+            return;
+        }
     }
+
 
     // Affichage des obstacles
     for (let obstacle of obstacles) {
@@ -171,6 +201,7 @@ function draw() {
             if (dist(enemy.pos.x, enemy.pos.y, playerHead.x, playerHead.y) < 40) {
                 // Réduire les vies
                 lives--;
+                loseLifeSound.play();
 
                 // Réapparaître l'ennemi à une position aléatoire éloignée du joueur
                 do {
@@ -199,6 +230,9 @@ function draw() {
                 // Gold collecté
                 golds.splice(i, 1);
                 goldCollected++;
+
+                // Jouer le son de collecte
+                collectSound.play();
             }
         }
     }
@@ -358,6 +392,9 @@ function keyReleased() {
 
 function startGame() {
     playing = true;
+    currentLevel = 1;      // Réinitialise le niveau au début
+    setupLevel();          // Configure le premier niveau
+    gameStartSound.play(); // Jouer le son de démarrage
 }
 
 function restartGame() {
@@ -365,13 +402,27 @@ function restartGame() {
     paused = false;
     lives = 8;
     goldCollected = 0;
+    currentLevel = 1;      // Réinitialise le niveau
     enemies = [];
     golds = [];
     obstacles = [];
     snake = new Snake();
 
-    // Création de 3 obstacles aléatoires sans chevauchement
-    for (let i = 0; i < 3; i++) {
+    setupLevel();          // Configure le premier niveau
+    gameStartSound.play(); // Jouer le son de relance du jeu
+    loop();
+}
+function setupLevel() {
+    enemies = [];
+    obstacles = [];
+    golds = [];
+
+    // Calculer le nombre d'ennemis et d'obstacles selon le niveau
+    let enemyCount = baseEnemyCount + currentLevel - 1;
+    let obstacleCount = baseObstacleCount + currentLevel - 1;
+
+    // Création des obstacles
+    for (let i = 0; i < obstacleCount; i++) {
         let x, y, size, type;
         do {
             x = random(100, width - 100);
@@ -383,8 +434,8 @@ function restartGame() {
         obstacles.push(new Obstacle(x, y, size, "red", type));
     }
 
-    // Création de plusieurs ennemis en évitant les obstacles
-    for (let i = 0; i < 5; i++) {
+    // Création des ennemis
+    for (let i = 0; i < enemyCount; i++) {
         let x, y;
         do {
             x = random(width);
@@ -393,7 +444,7 @@ function restartGame() {
         enemies.push(new Enemy(x, y));
     }
 
-    // Création de 5 gold à des positions aléatoires en évitant les obstacles
+    // Création des golds
     for (let i = 0; i < 5; i++) {
         let x, y;
         do {
@@ -403,9 +454,12 @@ function restartGame() {
         golds.push(new Gold(x, y));
     }
 
-    loop();
-}
+    // Définir la vitesse du jeu selon le niveau
+    let speed = baseSpeed + (currentLevel - 1) * 5;
+    setSpeed(speed);
 
+    console.log(`Niveau ${currentLevel} : ${enemyCount} ennemis, ${obstacleCount} obstacles, vitesse ${speed}`);
+}
 
 function togglePause() {
     paused = !paused;
